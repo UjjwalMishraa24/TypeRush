@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "quotes": [
+    {
+      "text": "It is not the strength of the body that counts, but the strength of the spirit.",
+      "author": "J. R. R. Tolkien"
+    },
+    {
+      "text": "The only way to do great work is to love what you do, and to keep doing it long after the excitement wears off.",
+      "author": "Unknown"
+    },
+    {
+      "text": "We are what we repeatedly do. Excellence, then, is not an act but a habit.",
+      "author": "Aristotle"
+    },
+    {
+      "text": "In the middle of difficulty lies opportunity.",
+      "author": "Albert Einstein"
+    },
+    {
+      "text": "The best time to plant a tree was twenty years ago. The second best time is now.",
+      "author": "Proverb"
+    },
+    {
+      "text": "Simplicity is the ultimate sophistication.",
+      "author": "Leonardo da Vinci"
+    },
+    {
+      "text": "A journey of a thousand miles begins with a single step.",
+      "author": "Lao Tzu"
+    },
+    {
+      "text": "Knowing yourself is the beginning of all wisdom.",
+      "author": "Aristotle"
+    },
+    {
+      "text": "It always seems impossible until it is done.",
+      "author": "Nelson Mandela"
+    },
+    {
+      "text": "The unexamined life is not worth living.",
+      "author": "Socrates"
+    },
+    {
+      "text": "Not all those who wander are lost.",
+      "author": "J. R. R. Tolkien"
+    },
+    {
+      "text": "Whether you think you can or you think you cannot, you are right.",
+      "author": "Henry Ford"
+    },
+    {
+      "text": "Programs must be written for people to read, and only incidentally for machines to execute.",
+      "author": "Harold Abelson"
+    },
+    {
+      "text": "Premature optimization is the root of all evil in programming.",
+      "author": "Donald Knuth"
+    },
+    {
+      "text": "Talk is cheap. Show me the code.",
+      "author": "Linus Torvalds"
+    },
+    {
+      "text": "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.",
+      "author": "Martin Fowler"
+    },
+    {
+      "text": "There are only two hard things in computer science: cache invalidation and naming things.",
+      "author": "Phil Karlton"
+    },
+    {
+      "text": "Make it work, make it right, make it fast.",
+      "author": "Kent Beck"
+    },
+    {
+      "text": "Simplicity is prerequisite for reliability.",
+      "author": "Edsger W. Dijkstra"
+    },
+    {
+      "text": "The function of good software is to make the complex appear to be simple.",
+      "author": "Grady Booch"
+    },
+    {
+      "text": "Nothing in life is to be feared, it is only to be understood.",
+      "author": "Marie Curie"
+    },
+    {
+      "text": "Somewhere, something incredible is waiting to be known.",
+      "author": "Carl Sagan"
+    },
+    {
+      "text": "The important thing is not to stop questioning. Curiosity has its own reason for existing.",
+      "author": "Albert Einstein"
+    },
+    {
+      "text": "Do not go where the path may lead; go instead where there is no path and leave a trail.",
+      "author": "Ralph Waldo Emerson"
+    },
+    {
+      "text": "It is our choices that show what we truly are, far more than our abilities.",
+      "author": "J. K. Rowling"
+    },
+    {
+      "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+      "author": "Unknown"
+    },
+    {
+      "text": "The quick brown fox jumps over the lazy dog while the calm river runs beneath the old stone bridge.",
+      "author": "Pangram"
+    },
+    {
+      "text": "Everything should be made as simple as possible, but not simpler.",
+      "author": "Albert Einstein"
+    },
+    {
+      "text": "Perfection is achieved not when there is nothing more to add, but when there is nothing left to take away.",
+      "author": "Antoine de Saint-Exupery"
+    },
+    {
+      "text": "First, solve the problem. Then, write the code.",
+      "author": "John Johnson"
+    }
+  ]
+}
