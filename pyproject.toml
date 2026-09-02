@@ -1,0 +1,115 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "typerush"
+description = "A fast, distraction-free typing speed test for your terminal."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Uzzi" }]
+keywords = ["typing", "typing-test", "wpm", "cli", "tui", "terminal"]
+dynamic = ["version"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Games/Entertainment",
+  "Typing :: Typed",
+]
+dependencies = [
+  "textual>=0.60",
+  "rich>=13.7",
+  "typer>=0.12",
+  "pyfiglet>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "mypy>=1.10",
+  "ruff>=0.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/uzzi/typerush"
+Issues = "https://github.com/uzzi/typerush/issues"
+
+[project.scripts]
+typerush = "typerush.cli:run"
+
+[tool.hatch.version]
+path = "src/typerush/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/typerush"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/typerush", "tests", "README.md", "pyproject.toml"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "mypy>=1.10",
+  "ruff>=0.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort
+  "UP",  # pyupgrade
+  "B",   # bugbear
+  "SIM", # simplify
+  "RUF",
+  "ANN", # annotations
+]
+ignore = [
+  "ANN401", # allow typing.Any where it is genuinely needed
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN", "E501"]
+# typer.Option(...) in a default is the documented Typer idiom.
+"src/typerush/cli.py" = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "tests"]
+strict = true
+warn_unreachable = true
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = ["pyfiglet.*"]
+ignore_missing_imports = true
+
+# Tests are checked, but a `-> None` on every test function is pure noise, and
+# mypy's property narrowing produces false "unreachable" reports in assertions.
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+warn_unreachable = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+# Every test here is a plain function; this stops pytest trying to collect
+# domain classes such as TestMode and TestResult.
+python_classes = []
