@@ -24,8 +24,5 @@ htmlcov/
 *.swp
 .DS_Store
 
-# uv
-uv.lock
-# .md files 
-CLAUDE.md 
-README.md
+# Editor notes
+CLAUDE.md
