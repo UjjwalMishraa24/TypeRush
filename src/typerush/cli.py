@@ -7,6 +7,7 @@ evaluation leaves it holding strings it cannot resolve.
 
 import random
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import typer
@@ -18,7 +19,9 @@ from .game.engine import TestMode, TestResult, TypingEngine
 from .game.wordlist import WordSourceError, build_target
 from .storage.config import Config, ConfigError, load_config, save_config
 from .storage.history import HistoryError, append_result, best_entry, history_path, load_history
+from .theme import theme_names
 from .ui.results_screen import render_history, render_results
+from .ui.theme_picker import pick_theme
 from .ui.typing_screen import Restart, run_test
 
 HELP = """
@@ -27,6 +30,8 @@ A fast, distraction-free typing speed test for your terminal.
 Run [bold]typerush[/bold] for a 30-second test, or pick a mode:
 [bold]--time 60[/bold], [bold]--words 50[/bold], [bold]--quote[/bold].
 While typing: [bold]tab[/bold] restarts, [bold]esc[/bold] quits.
+Pick a colour scheme with [bold]--ui[/bold] (default, catppuccin,
+tokyo-night, gruvbox).
 """
 
 app = typer.Typer(
@@ -115,6 +120,16 @@ def _record(result: TestResult, config: Config, save: bool) -> None:
     console.print(render_results(result, config.theme, saved=saved, personal_best=is_best))
 
 
+def _choose_theme_interactive(config: Config) -> Config | None:
+    """Run the picker; return an updated config, or ``None`` if cancelled."""
+    if not (sys.stdin.isatty() and sys.stdout.isatty()):
+        _fail("theme picker needs an interactive terminal (try --theme NAME)")
+    name = pick_theme(config.theme_name)
+    if name is None or name == config.theme_name:
+        return None
+    return replace(config, theme_name=name)
+
+
 @app.command(help=HELP)
 def main(
     seconds: int | None = typer.Option(
@@ -147,6 +162,15 @@ def main(
     limit: int = typer.Option(10, "--limit", help="Rows to show with --stats.", min=1),
     no_banner: bool = typer.Option(False, "--no-banner", help="Skip the splash screen."),
     no_save: bool = typer.Option(False, "--no-save", help="Do not write this run to history."),
+    ui: bool = typer.Option(
+        False, "--ui", help="Pick a colour theme interactively, save it, and exit."
+    ),
+    theme: str | None = typer.Option(
+        None,
+        "--theme",
+        metavar="NAME",
+        help=f"Bundled theme to use for this run and save as default ({', '.join(theme_names())}).",
+    ),
     init_config: bool = typer.Option(
         False, "--init-config", help="Write a default config file and exit."
     ),
@@ -157,6 +181,23 @@ def main(
     """Run a typing test."""
     config = _load_config_or_default()
     banner = config.show_banner and not no_banner
+
+    if theme is not None:
+        if theme not in theme_names():
+            _fail(f"unknown theme {theme!r} (choose from {', '.join(theme_names())})")
+        if theme != config.theme_name:
+            config = replace(config, theme_name=theme)
+            save_config(config)
+            console.print(f"[green]saved[/green] theme [bold]{theme}[/bold]")
+
+    if ui:
+        updated = _choose_theme_interactive(config)
+        if updated is None:
+            raise typer.Exit()
+        config = updated
+        save_config(config)
+        console.print(f"[green]saved[/green] theme [bold]{config.theme_name}[/bold]")
+        raise typer.Exit()
 
     if init_config:
         written = save_config(config)

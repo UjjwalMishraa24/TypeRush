@@ -25,6 +25,7 @@ WPM while you type, and a results card that stays in your scrollback.
 - **Scrolling text window** — three lines at a time, following your cursor, so long tests never overflow the screen
 - **Results card** — big gradient WPM number plus the full breakdown
 - **History** — every completed run is appended to `~/.typerush/history.json`; view it with `--stats`
+- **Colour themes** — default, catppuccin, tokyo-night and gruvbox, picked interactively with `--ui` or set directly with `--theme`
 - **Config** — theme colours and defaults in `~/.typerush/config.json`
 - **Custom text** — point `--wordlist` / `--quotes` at your own files
 - **Fully offline** — no network calls, ever
@@ -67,6 +68,8 @@ typerush --words 50         # type exactly 50 words
 typerush --quote            # type a random quote
 typerush --stats            # show past results and exit
 typerush --stats --limit 25 # ...more of them
+typerush --ui               # pick a theme interactively and save it
+typerush --theme gruvbox    # set a theme directly and save it
 ```
 
 ### Keys during a test
@@ -93,6 +96,8 @@ you like getting comfortable.
 | `--seed N` | Seed the generator for a reproducible test |
 | `--stats` | Print the history table and exit |
 | `--limit N` | Rows shown by `--stats` (default 10) |
+| `--ui` | Pick a theme from a live, banner-previewing box and save it |
+| `--theme NAME` | Use (and save) a bundled theme directly |
 | `--no-banner` | Skip the splash screen and start typing immediately |
 | `--no-save` | Don't write this run to history |
 | `--init-config` | Write a default `~/.typerush/config.json` and exit |
@@ -141,17 +146,32 @@ typerush --init-config     # creates ~/.typerush/config.json
   "save_history": true,
   "wordlist_path": null,
   "quotes_path": null,
-  "theme": {
-    "correct": "#e5e7eb",
-    "incorrect": "#f87171",
-    "pending": "#4b5563",
-    "cursor": "#22d3ee",
-    "accent": "#22d3ee",
-    "mid": "#3b82f6",
-    "secondary": "#a855f7",
-    "good": "#4ade80",
-    "muted": "#6b7280"
-  }
+  "theme_name": "default",
+  "theme": {}
+}
+```
+
+### Themes
+
+`theme_name` picks a bundled palette: `default`, `catppuccin`, `tokyo-night`
+or `gruvbox`. The `--ui` picker shows them all with a live banner preview and
+saves your choice; `--theme NAME` sets one directly.
+
+The `theme` object optionally overrides individual colours on top of the
+named preset — `{"accent": "#ff0000"}` keeps every other colour from the
+preset. Valid fields:
+
+```json
+"theme": {
+  "correct": "typed correctly",
+  "incorrect": "typed wrong",
+  "pending": "not reached yet",
+  "cursor": "the caret",
+  "accent": "banner start, live WPM",
+  "mid": "banner mid-stop",
+  "secondary": "banner end",
+  "good": "positive numbers",
+  "muted": "hints and low emphasis"
 }
 ```
 
@@ -198,6 +218,7 @@ Both can be set permanently via `wordlist_path` / `quotes_path` in the config.
 src/typerush/
   cli.py                  entrypoint, flag parsing, run loop
   banner.py               gradient ASCII art (pyfiglet + rich)
+  theme.py                Theme dataclass + named presets
   game/                   no terminal imports — unit-testable
     engine.py             typing-test state machine
     stats.py              WPM / accuracy math
@@ -206,6 +227,7 @@ src/typerush/
     typing_screen.py      Textual app: splash + live typing view
     textview.py           word wrapping and character styling (pure)
     results_screen.py     results card and --stats table
+    theme_picker.py       --ui theme picker (Textual app)
   storage/
     config.py             ~/.typerush/config.json
     history.py            ~/.typerush/history.json

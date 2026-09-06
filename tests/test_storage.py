@@ -10,7 +10,6 @@ from typerush.game.engine import TestMode, TypingEngine
 from typerush.storage.config import (
     Config,
     ConfigError,
-    Theme,
     config_from_mapping,
     config_path,
     load_config,
@@ -28,6 +27,7 @@ from typerush.storage.history import (
     recent_entries,
     save_history,
 )
+from typerush.theme import Theme
 
 
 def finished_result(wpm_text: str = "hello world", *, mode: TestMode = TestMode.QUOTE):
@@ -51,7 +51,12 @@ def test_missing_config_returns_defaults():
 
 
 def test_save_then_load_round_trips():
-    original = Config(default_time=45, show_banner=False, theme=Theme(accent="#ff0000"))
+    original = Config(
+        default_time=45,
+        show_banner=False,
+        theme_name="gruvbox",
+        theme_overrides={"accent": "#ff0000"},
+    )
     path = save_config(original)
     assert path.exists()
     assert load_config() == original
@@ -125,7 +130,31 @@ def test_saved_config_is_valid_json():
     save_config(Config())
     payload = json.loads(config_path().read_text(encoding="utf-8"))
     assert payload["default_mode"] == "time"
-    assert payload["theme"]["accent"] == Theme().accent
+    assert payload["theme_name"] == "default"
+    # Overrides are stored under the legacy "theme" key, empty when none are set.
+    assert payload["theme"] == {}
+
+
+def test_config_resolves_the_named_preset():
+    config = Config(theme_name="catppuccin")
+    assert config.theme.accent == "#94e2d5"
+
+
+def test_config_theme_overrides_apply_on_top_of_the_preset():
+    config = Config(theme_name="catppuccin", theme_overrides={"accent": "#ff0000"})
+    assert config.theme.accent == "#ff0000"
+    assert config.theme.correct == "#cdd6f4"
+
+
+def test_config_unknown_theme_name_falls_back_to_default():
+    config = Config(theme_name="nonsense")
+    assert config.theme == Theme()
+
+
+def test_config_reads_a_legacy_theme_block():
+    config = config_from_mapping({"theme": {"accent": "#123456"}})
+    assert config.theme_name == "default"
+    assert config.theme.accent == "#123456"
 
 
 # -------------------------------------------------------------------- history

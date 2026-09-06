@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from .config import Config, ConfigError, Theme, config_path, load_config, save_config, typerush_home
+from ..theme import Theme
+from .config import Config, ConfigError, config_path, load_config, save_config, typerush_home
 from .history import (
     HistoryEntry,
     HistoryError,

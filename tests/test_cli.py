@@ -99,3 +99,33 @@ def test_config_default_mode_is_validated():
     config_path().write_text(json.dumps({"default_mode": "banana"}), encoding="utf-8")
     result = runner.invoke(app, ["--no-banner"])
     assert "is not a mode" in result.output
+
+
+def test_theme_flag_saves_the_named_preset():
+    result = runner.invoke(app, ["--theme", "gruvbox", "--stats", "--no-banner"])
+    assert result.exit_code == 0
+    payload = json.loads(config_path().read_text(encoding="utf-8"))
+    assert payload["theme_name"] == "gruvbox"
+
+
+def test_theme_flag_with_the_current_theme_does_not_rewrite_the_file():
+    config_path().parent.mkdir(parents=True, exist_ok=True)
+    config_path().write_text(json.dumps({"theme_name": "gruvbox"}), encoding="utf-8")
+    result = runner.invoke(app, ["--theme", "gruvbox", "--stats", "--no-banner"])
+    assert result.exit_code == 0
+    assert "saved" not in result.output
+
+
+def test_unknown_theme_flag_is_rejected():
+    result = runner.invoke(app, ["--theme", "nonsense"])
+    assert result.exit_code == 1
+    assert "unknown theme" in result.output
+    assert "gruvbox" in result.output
+
+
+def test_ui_flag_without_a_terminal_fails_helpfully():
+    # CliRunner is not a tty, which is exactly the case we want to cover.
+    result = runner.invoke(app, ["--ui"])
+    assert result.exit_code == 1
+    assert "interactive terminal" in result.output
+    assert "--theme" in result.output

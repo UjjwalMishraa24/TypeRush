@@ -13,6 +13,8 @@ from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
+from ..theme import DEFAULT_THEME_NAME, Theme, resolve_theme
+
 DEFAULT_HOME = "~/.typerush"
 HOME_ENV_VAR = "TYPERUSH_HOME"
 CONFIG_FILENAME = "config.json"
@@ -20,35 +22,6 @@ CONFIG_FILENAME = "config.json"
 
 class ConfigError(RuntimeError):
     """Raised when the config file exists but cannot be understood."""
-
-
-@dataclass(frozen=True, slots=True)
-class Theme:
-    """Colours used by the typing screen and results card."""
-
-    #: Characters typed correctly.
-    correct: str = "#e5e7eb"
-    #: Characters typed incorrectly.
-    incorrect: str = "#f87171"
-    #: Text not reached yet.
-    pending: str = "#4b5563"
-    #: The caret.
-    cursor: str = "#22d3ee"
-    #: Primary accent (banner start, live WPM, highlights).
-    accent: str = "#22d3ee"
-    #: Banner mid-stop.
-    mid: str = "#3b82f6"
-    #: Secondary accent (banner end, attributions).
-    secondary: str = "#a855f7"
-    #: Positive numbers, e.g. accuracy.
-    good: str = "#4ade80"
-    #: Low-emphasis chrome and hints.
-    muted: str = "#6b7280"
-
-    @property
-    def gradient(self) -> tuple[str, str, str]:
-        """Colour stops for the ASCII banner sweep."""
-        return (self.accent, self.mid, self.secondary)
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,7 +35,10 @@ class Config:
     save_history: bool = True
     wordlist_path: str | None = None
     quotes_path: str | None = None
-    theme: Theme = field(default_factory=Theme)
+    #: Name of the bundled palette to use (see :mod:`typerush.theme`).
+    theme_name: str = DEFAULT_THEME_NAME
+    #: Per-field colours applied on top of the named preset.
+    theme_overrides: dict[str, str] = field(default_factory=dict)
 
     @property
     def wordlist(self) -> Path | None:
@@ -71,6 +47,11 @@ class Config:
     @property
     def quotes(self) -> Path | None:
         return Path(self.quotes_path).expanduser() if self.quotes_path else None
+
+    @property
+    def theme(self) -> Theme:
+        """The resolved palette: the named preset plus any overrides."""
+        return resolve_theme(self.theme_name, self.theme_overrides)
 
 
 def typerush_home() -> Path:
@@ -82,12 +63,14 @@ def config_path() -> Path:
     return typerush_home() / CONFIG_FILENAME
 
 
-def _theme_from_mapping(data: Any, base: Theme) -> Theme:
+def _theme_overrides_from_mapping(data: Any, base: dict[str, str]) -> dict[str, str]:
     if not isinstance(data, dict):
         return base
-    known = {f: v for f, v in data.items() if f in Theme.__dataclass_fields__}
-    colours = {name: str(value) for name, value in known.items() if isinstance(value, str)}
-    return replace(base, **colours)
+    overrides = dict(base)
+    for colour, value in data.items():
+        if colour in Theme.__dataclass_fields__ and isinstance(value, str) and value.strip():
+            overrides[colour] = value.strip()
+    return overrides
 
 
 def config_from_mapping(data: Any, base: Config | None = None) -> Config:
@@ -101,6 +84,9 @@ def config_from_mapping(data: Any, base: Config | None = None) -> Config:
         value = data.get(name)
         if isinstance(value, str) and value.strip():
             updates[name] = value.strip()
+    theme_name = data.get("theme_name")
+    if isinstance(theme_name, str) and theme_name.strip():
+        updates["theme_name"] = theme_name.strip()
     for name in ("default_time", "default_words"):
         value = data.get(name)
         if isinstance(value, int) and not isinstance(value, bool) and value > 0:
@@ -110,7 +96,9 @@ def config_from_mapping(data: Any, base: Config | None = None) -> Config:
         if isinstance(value, bool):
             updates[name] = value
     if "theme" in data:
-        updates["theme"] = _theme_from_mapping(data["theme"], current.theme)
+        updates["theme_overrides"] = _theme_overrides_from_mapping(
+            data["theme"], current.theme_overrides
+        )
     return replace(current, **updates)
 
 
@@ -137,10 +125,15 @@ def load_config(path: Path | None = None) -> Config:
 
 
 def save_config(config: Config, path: Path | None = None) -> Path:
-    """Write ``config`` as pretty JSON, creating ``~/.typerush`` if needed."""
+    """Write ``config`` as pretty JSON, creating ``~/.typerush`` if needed.
+
+    Overrides are written under the legacy ``"theme"`` key so files stay
+    readable by (and interchangeable with) older typerush versions.
+    """
     target = path or config_path()
     target.parent.mkdir(parents=True, exist_ok=True)
     payload = asdict(config)
+    payload["theme"] = payload.pop("theme_overrides")
     tmp = target.with_suffix(target.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     tmp.replace(target)
