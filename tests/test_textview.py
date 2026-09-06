@@ -4,7 +4,7 @@ import pytest
 from rich.console import Console, RenderableType
 
 from typerush.game.engine import CharState, TestMode, TypingEngine
-from typerush.storage.config import Theme
+from typerush.theme import Theme
 from typerush.ui.textview import (
     line_for_cursor,
     render_footer,

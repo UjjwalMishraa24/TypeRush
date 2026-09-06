@@ -25,7 +25,7 @@ from textual.widgets import Static
 
 from ..banner import render_banner
 from ..game.engine import TestResult, TypingEngine
-from ..storage.config import Theme
+from ..theme import Theme
 from .textview import (
     line_for_cursor,
     render_footer,

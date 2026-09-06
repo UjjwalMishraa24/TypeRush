@@ -17,8 +17,8 @@ from rich.text import Text
 
 from ..banner import render_big_number
 from ..game.engine import TestResult
-from ..storage.config import Theme
 from ..storage.history import HistoryEntry, average_wpm, best_entry
+from ..theme import Theme
 
 
 def _metric(label: str, value: str, theme: Theme, *, colour: str | None = None) -> Text:

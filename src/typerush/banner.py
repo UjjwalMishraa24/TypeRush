@@ -15,7 +15,7 @@ from rich.console import Group, RenderableType
 from rich.text import Text
 
 from . import __version__
-from .storage.config import Theme
+from .theme import Theme
 
 DEFAULT_TITLE = "typerush"
 TAGLINE = "terminal typing speed test"

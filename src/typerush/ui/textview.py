@@ -14,7 +14,7 @@ from rich.table import Table
 from rich.text import Text
 
 from ..game.engine import CharState, TestMode, TypingEngine
-from ..storage.config import Theme
+from ..theme import Theme
 
 TYPING_HINT = "esc quit  ·  tab restart"
 
