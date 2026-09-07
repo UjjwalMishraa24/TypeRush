@@ -19,6 +19,7 @@ from ..banner import render_big_number
 from ..game.engine import TestResult
 from ..storage.history import HistoryEntry, average_wpm, best_entry
 from ..theme import Theme
+from .graph import render_wpm_chart
 
 
 def _metric(label: str, value: str, theme: Theme, *, colour: str | None = None) -> Text:
@@ -68,6 +69,11 @@ def render_results(
     ]
 
     body: list[RenderableType] = [render_big_number(stats.wpm_display, palette), _metric_grid(rows)]
+
+    chart = render_wpm_chart(result.samples, palette)
+    if chart is not None:
+        body.append(Text())
+        body.append(chart)
 
     if result.source:
         attribution = Text()

@@ -23,7 +23,7 @@ WPM while you type, and a results card that stays in your scrollback.
 - **Live stats** — WPM, raw WPM, accuracy and error count update as you type
 - **Character-accurate highlighting** — correct, incorrect and untyped text are all styled differently, with a visible caret
 - **Scrolling text window** — three lines at a time, following your cursor, so long tests never overflow the screen
-- **Results card** — big gradient WPM number plus the full breakdown
+- **Results card** — big gradient WPM number, the full breakdown, and a chart of your net and raw speed over the whole run
 - **History** — every completed run is appended to `~/.typerush/history.json`; view it with `--stats`
 - **Colour themes** — default, catppuccin, tokyo-night and gruvbox, picked interactively with `--ui` or set directly with `--theme`
 - **Config** — theme colours and defaults in `~/.typerush/config.json`
@@ -228,6 +228,7 @@ src/typerush/
     textview.py           word wrapping and character styling (pure)
     results_screen.py     results card and --stats table
     theme_picker.py       --ui theme picker (Textual app)
+    graph.py              ASCII speed-over-time chart (pure)
   storage/
     config.py             ~/.typerush/config.json
     history.py            ~/.typerush/history.json

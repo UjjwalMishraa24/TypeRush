@@ -15,6 +15,43 @@ def test_rejects_empty_target():
         TypingEngine("")
 
 
+def test_samples_are_taken_once_per_whole_second(clock):
+    engine = TypingEngine("aaaa", mode=TestMode.WORDS, word_limit=1, time_fn=clock)
+    type_text(engine, "a")
+    clock.advance(2.5)
+    engine.tick()
+    assert [sample.elapsed for sample in engine.samples] == [1.0, 2.0]
+    # Each snapshot carries the counters at that moment.
+    assert engine.samples[0].correct_chars == 1
+    assert all(sample.typed_chars == 1 for sample in engine.samples)
+
+
+def test_finishing_appends_a_sample_at_the_exact_end_time(clock):
+    engine = TypingEngine("ab cd", mode=TestMode.WORDS, word_limit=2, time_fn=clock)
+    type_text(engine, "ab ")
+    clock.advance(3.4)
+    type_text(engine, "cd")
+    elapsed = [sample.elapsed for sample in engine.result().samples]
+    assert elapsed == [1.0, 2.0, 3.0, pytest.approx(3.4)]
+
+
+def test_timed_mode_pins_the_last_sample_to_the_duration(clock):
+    engine = TypingEngine("aaaa", mode=TestMode.TIME, duration=3.0, time_fn=clock)
+    type_text(engine, "a")
+    clock.advance(3.0)
+    engine.tick()
+    assert engine.finished
+    assert [sample.elapsed for sample in engine.result().samples] == [1.0, 2.0, 3.0]
+
+
+def test_no_samples_before_the_first_keystroke(clock):
+    engine = TypingEngine("hello", mode=TestMode.WORDS, time_fn=clock)
+    clock.advance(10.0)
+    engine.tick()
+    assert engine.samples == ()
+    assert engine.result().samples == ()
+
+
 def test_time_mode_requires_a_duration():
     with pytest.raises(ValueError, match="positive duration"):
         TypingEngine("abc", mode=TestMode.TIME)
