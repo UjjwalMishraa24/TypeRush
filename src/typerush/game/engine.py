@@ -36,6 +36,15 @@ class TestMode(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class WpmSample:
+    """Counters frozen at a moment during the test, for graphing speed over time."""
+
+    elapsed: float
+    correct_chars: int
+    typed_chars: int
+
+
+@dataclass(frozen=True, slots=True)
 class TestResult:
     """Everything needed to render a results card or write a history entry."""
 
@@ -47,6 +56,7 @@ class TestResult:
     duration_limit: float | None = None
     word_limit: int | None = None
     source: str | None = None
+    samples: tuple[WpmSample, ...] = ()
 
     @property
     def label(self) -> str:
@@ -97,6 +107,9 @@ class TypingEngine:
         self._started_at: float | None = None
         self._ended_at: float | None = None
         self._completed = False
+        #: Per-second snapshots for the results graph.
+        self._samples: list[WpmSample] = []
+        self._next_sample_second = 1
 
     # ------------------------------------------------------------------ state
 
@@ -145,6 +158,11 @@ class TypingEngine:
     def word_total(self) -> int:
         """Number of whitespace-separated words in the target."""
         return len(self.target.split())
+
+    @property
+    def samples(self) -> tuple[WpmSample, ...]:
+        """Speed-over-time snapshots taken every whole second while typing."""
+        return tuple(self._samples)
 
     @property
     def words_completed(self) -> int:
@@ -203,8 +221,10 @@ class TypingEngine:
 
     def tick(self) -> bool:
         """Let the clock end a timed test. Returns :attr:`finished`."""
-        if not self.finished and self._expired():
-            self._finish(completed=True)
+        if not self.finished:
+            self._record_samples()
+            if self._expired():
+                self._finish(completed=True)
         return self.finished
 
     def abandon(self) -> None:
@@ -242,9 +262,25 @@ class TypingEngine:
             duration_limit=self.duration,
             word_limit=self.word_limit,
             source=self.source,
+            samples=tuple(self._samples),
         )
 
     # --------------------------------------------------------------- internal
+
+    def _record_samples(self) -> None:
+        """Snapshot the counters once per whole second of typing."""
+        if self._started_at is None:
+            return
+        elapsed = self.elapsed
+        while self._next_sample_second <= elapsed:
+            self._samples.append(
+                WpmSample(
+                    elapsed=float(self._next_sample_second),
+                    correct_chars=self._correct_chars,
+                    typed_chars=self._correct_chars + self._incorrect_chars,
+                )
+            )
+            self._next_sample_second += 1
 
     def _expired(self) -> bool:
         if self.mode is not TestMode.TIME or self.duration is None:
@@ -262,3 +298,14 @@ class TypingEngine:
         else:
             self._ended_at = self._time_fn()
         self._completed = completed
+        self._record_samples()
+        # The final sample lands on the exact end time, even between seconds.
+        last = self._samples[-1].elapsed if self._samples else 0.0
+        if self.elapsed > last:
+            self._samples.append(
+                WpmSample(
+                    elapsed=self.elapsed,
+                    correct_chars=self._correct_chars,
+                    typed_chars=self._correct_chars + self._incorrect_chars,
+                )
+            )
